@@ -1,6 +1,6 @@
 package trello
 
-type TrelloApi struct {
+type Api struct {
 	apiKey    string
 	authToken string
 }

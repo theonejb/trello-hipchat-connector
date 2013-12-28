@@ -7,15 +7,7 @@ import (
 	"strings"
 )
 
-type webhook struct {
-	Id          string
-	Description string
-	IdModel     string
-	CallbackURL string
-	Active      bool
-}
-
-func (api *TrelloApi) GetWebhooks() ([]webhook, error) {
+func (api *Api) GetWebhooks() ([]Webhook, error) {
 	getWebhooksUrl := createCompleteUrlFromPath(webhooksListPath, api.authToken)
 	getWebhooksUrl, err := api.addAuthKeysToStringUrl(getWebhooksUrl)
 	if err != nil {
@@ -30,7 +22,7 @@ func (api *TrelloApi) GetWebhooks() ([]webhook, error) {
 		return nil, createRequestFailedError(resp, body)
 	}
 
-	webhooks := make([]webhook, 5)
+	webhooks := make([]Webhook, 5)
 	err = json.Unmarshal(body, &webhooks)
 	if err != nil {
 		return nil, err
@@ -39,8 +31,8 @@ func (api *TrelloApi) GetWebhooks() ([]webhook, error) {
 	return webhooks, nil
 }
 
-func (api *TrelloApi) CreateWebhook(webhook *Webhook) error {
-	jsonWebhook, err := json.Marshal(webhook)
+func (api *Api) CreateWebhook(Webhook *Webhook) error {
+	jsonWebhook, err := json.Marshal(Webhook)
 	if err != nil {
 		return err
 	}
@@ -66,7 +58,7 @@ func (api *TrelloApi) CreateWebhook(webhook *Webhook) error {
 		return createRequestFailedError(resp, body)
 	}
 
-	err = json.Unmarshal(body, webhook)
+	err = json.Unmarshal(body, Webhook)
 	if err != nil {
 		return err
 	}

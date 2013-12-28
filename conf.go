@@ -17,8 +17,9 @@ type trelloConfig struct {
 	Boards    trelloBoardConfig
 }
 type hipchatConfig struct {
-	ApiKey string
-	RoomId string
+	ApiKey   string
+	RoomId   string
+	RoomName string
 }
 type appConfig struct {
 	BoardWebhookCallbackUrl string
@@ -26,6 +27,7 @@ type appConfig struct {
 	ServerAddress           string
 	ReadTimeout             int
 	WriteTimeout            int
+	SleepDuration           int
 }
 type thConfigData struct {
 	Trello  trelloConfig

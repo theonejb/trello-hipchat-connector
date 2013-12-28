@@ -6,12 +6,12 @@ import (
 	"net/url"
 )
 
-func NewApi(key, token string) (*TrelloApi, error) {
-	api := &TrelloApi{apiKey: key, authToken: token}
+func NewApi(key, token string) (*Api, error) {
+	api := &Api{apiKey: key, authToken: token}
 	return api, nil
 }
 
-func (api *TrelloApi) addAuthKeysToStringUrl(oldUrl string) (string, error) {
+func (api *Api) addAuthKeysToStringUrl(oldUrl string) (string, error) {
 	parsedUrl, err := url.Parse(oldUrl)
 	if err != nil {
 		return "", errors.New(fmt.Sprintf("Unable to add auth keys to URL. URL: %s", oldUrl))

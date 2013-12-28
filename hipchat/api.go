@@ -2,25 +2,29 @@ package hipchat
 
 import "encoding/json"
 import "fmt"
+import "log"
 import "net/http"
 import "net/url"
 
-type HipchatApi struct {
+type Api struct {
 	apiKey string
 	apiUrl string
+	logger *log.Logger
 }
 
-type HipchatRoom struct {
-	HipchatApi
-	roomId string
+type Room struct {
+	Api
+	roomId   string
+	RoomName string
 }
 
-func NewHipchatRoom(apiKey string, roomId string) *HipchatRoom {
+func NewRoom(apiKey string, roomId string, roomName string, logger *log.Logger) *Room {
 	urlWithAuthToken := fmt.Sprintf("%s?auth_token=%s", roomPostUrl, apiKey)
-	return &HipchatRoom{HipchatApi: HipchatApi{apiKey: apiKey, apiUrl: urlWithAuthToken}, roomId: roomId}
+	return &Room{Api: Api{apiKey: apiKey,
+		apiUrl: urlWithAuthToken, logger: logger}, roomId: roomId, RoomName: roomName}
 }
 
-func (room *HipchatRoom) PostMessage(message, from, msgFormat, notify, color string) error {
+func (room *Room) PostMessage(message, from, msgFormat, notify, color string) error {
 	messageData := &url.Values{"room_id": {room.roomId}, "from": {from},
 		"message": {message}, "message_format": {msgFormat},
 		"notify": {notify}, "color": {color}, "format": {"json"}}
@@ -28,16 +32,19 @@ func (room *HipchatRoom) PostMessage(message, from, msgFormat, notify, color str
 	resp, err := http.PostForm(room.apiUrl, *messageData)
 	defer resp.Body.Close()
 	if err != nil {
+		room.logger.Println("Error encountered while posting message")
 		return err
 	}
 
 	body := make([]byte, resp.ContentLength)
 	if _, err = resp.Body.Read(body); err != nil {
+		room.logger.Println("Error encountered while reading response message body")
 		return err
 	}
 
 	decodedResponse, err := convertJsonResponseToStruct(body)
 	if err != nil {
+		room.logger.Println("Error encountered while converting response body to Json")
 		return err
 	}
 	if resp.StatusCode != http.StatusOK {
@@ -53,8 +60,8 @@ type apiErrorData struct {
 	Message string
 }
 type apiDecodedResponse struct {
-	apiErrorData
-	Status string
+	apiErrorData `json:"error"`
+	Status       string
 }
 
 func (ds *apiDecodedResponse) Error() string {
@@ -64,19 +71,9 @@ func (ds *apiDecodedResponse) Error() string {
 
 func convertJsonResponseToStruct(responseBody []byte) (*apiDecodedResponse, error) {
 	ds := &apiDecodedResponse{}
-	parsedJson := make(map[string]interface{})
+	parsedJson := &apiDecodedResponse{} //make(map[string]interface{})
 	if err := json.Unmarshal(responseBody, &parsedJson); err != nil {
 		return nil, err
 	}
-	if val, ok := parsedJson["status"]; ok {
-		ds.Status = val.(string)
-	}
-	if val, ok := parsedJson["error"]; ok {
-		errData := val.(map[string]interface{})
-		ds.apiErrorData.Code = int(errData["code"].(float64))
-		ds.apiErrorData.Type = errData["type"].(string)
-		ds.apiErrorData.Message = errData["message"].(string)
-	}
-
 	return ds, nil
 }
